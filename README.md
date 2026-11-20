@@ -12,4 +12,4 @@ on the first machine with what it needs (`always-on`).
 
 ## Setup
 
-Needs the browser spur (`github:zachsents/spur-browser#83a3948` or later) on a machine whose Chrome is signed in to Instagram.
+Needs the browser spur (`github:zachsents/spur-browser#a4e1fda` or later) on a machine whose Chrome is signed in to Instagram.
