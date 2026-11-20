@@ -35,7 +35,7 @@ import time
 
 import sbmcp
 
-app = sbmcp.Server('instagram-dms', version='5', reaches={'calls': ['browser_navigate', 'browser_js', 'browser_release']}, connections=[{'provider': 'instagram', 'kind': 'session', 'label': 'Instagram', 'scopes': [], 'multiple': False}], instructions="The user's Instagram DMs (the account signed in to Chrome on this Mac), read without opening a chat, so nothing shows Seen: replays the inbox page's own queries from a background tab every 2 minutes while a conversation is live, else every 5. Records each conversation as instagram-thread:<thread id> in comms/instagram whenever its latest message, read state or receipts change: who, the latest message and who sent it, unread, whether they've seen the user's, what's unanswered, the last few messages in full and a link; new_from_them (with new_messages) marks the first sight of a new message from the other side. Actions: check reads the inbox now; thread reads one conversation's history without opening it; send sends a DM in the user's name.")
+app = sbmcp.Server('instagram-dms', version='5', reaches={'calls': ['browser_act']}, connections=[{'provider': 'instagram', 'kind': 'session', 'label': 'Instagram', 'scopes': [], 'multiple': False}], instructions="The user's Instagram DMs (the account signed in to Chrome on this Mac), read without opening a chat, so nothing shows Seen: replays the inbox page's own queries from a background tab every 2 minutes while a conversation is live, else every 5. Records each conversation as instagram-thread:<thread id> in comms/instagram whenever its latest message, read state or receipts change: who, the latest message and who sent it, unread, whether they've seen the user's, what's unanswered, the last few messages in full and a link; new_from_them (with new_messages) marks the first sight of a new message from the other side. Actions: check reads the inbox now; thread reads one conversation's history without opening it; send sends a DM in the user's name.")
 app.event('thread', "A DM conversation: a new message, a read, who's waiting on whom", stream='comms/instagram', kind='observation')
 app.event('heartbeat', 'How the sense stands: polling, signed out, errors', stream='vitals/instagram-dms', kind='observation', retention='signal')
 
@@ -121,8 +121,8 @@ def js(op):
 
 
 SWITCH = bool(os.environ.get("SWITCH_MACHINE"))
-"""Run by Switch: the page is driven through the browser spur's tools (browser_navigate, browser_js), in this spur's
-own session tab; else through Switchboard's macOS appendage."""
+"""Run by Switch: the page is driven through the browser spur's act tool, in this spur's own session tab; else
+through Switchboard's macOS appendage."""
 
 
 def text_of(result):
@@ -130,25 +130,11 @@ def text_of(result):
 
 
 def switch_steps(ops, timeout):
-    """The same ops through the browser spur: navigate and js as its tools, wait here. Typing isn't one of them."""
-    out = []
-    end = time.time() + timeout
-    for op in ops:
-        if time.time() > end:
-            raise RuntimeError("the browser took too long")
-        if op["op"] == "wait":
-            time.sleep(op.get("seconds", 1))
-            continue
-        if op["op"] == "navigate":
-            r = app.call("browser_navigate", {"url": op["url"], "session": SESSION}, timeout=60)
-        elif op["op"] == "js":
-            r = app.call("browser_js", {"code": op["code"], "session": SESSION}, timeout=60)
-        else:
-            raise RuntimeError(f"the browser spur has no {op['op']}: sending isn't supported here yet")
-        if r.get("isError"):
-            raise RuntimeError(text_of(r)[:400])
-        out.append(text_of(r))
-    return {"ok": True, "output": "\n".join(out)}
+    """The same ops through the browser spur's act tool, in one call, as the macOS appendage's browser action took them."""
+    r = app.call("browser_act", {"op": "steps", "session": SESSION, "steps": ops}, timeout=timeout + 15)
+    if r.get("isError"):
+        raise RuntimeError(text_of(r)[:400])
+    return {"ok": True, "output": text_of(r)}
 
 
 def steps(ops, timeout=120):

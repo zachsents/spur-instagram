@@ -26,9 +26,7 @@
     ],
     "reaches": {
       "calls": [
-        "browser_navigate",
-        "browser_js",
-        "browser_release"
+        "browser_act"
       ]
     }
   }
