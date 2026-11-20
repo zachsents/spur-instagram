@@ -1,0 +1,35 @@
+{
+  "name": "spur-instagram",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Instagram DMs as a Switch spur: the inbox read through the browser spur without opening a chat, so nothing shows Seen.",
+  "license": "MIT",
+  "repository": "github:zachsents/spur-instagram",
+  "spur": {
+    "name": "instagram-dms",
+    "command": [
+      "python3",
+      "./main.py"
+    ],
+    "shim": "switchboard",
+    "needs": [
+      "always-on"
+    ],
+    "connections": [
+      {
+        "provider": "instagram",
+        "kind": "session",
+        "label": "Instagram",
+        "scopes": [],
+        "multiple": false
+      }
+    ],
+    "reaches": {
+      "calls": [
+        "browser_navigate",
+        "browser_js",
+        "browser_release"
+      ]
+    }
+  }
+}
